@@ -1,6 +1,8 @@
 [package]
 name = "sprout"
 version = "0.1.0"
+authors = ["Eduardo Asafe <e@asafe.dev>"]
 edition = "2021"
 
 [dependencies]
+postgres = "0.19.7"
