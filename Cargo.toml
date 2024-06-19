@@ -5,4 +5,10 @@ authors = ["Eduardo Asafe <e@asafe.dev>"]
 edition = "2021"
 
 [dependencies]
+itertools = "0.13.0"
+mailjet-rs = "0.3.0"
 postgres = "0.19.7"
+serde_json = "1.0.117"
+
+# Used by `Hyper` which is the HTTP request solution behind the Client
+tokio = { version = "1", features = ["full"] }
