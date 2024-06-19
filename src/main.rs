@@ -52,7 +52,7 @@ async fn build_emails() -> Result<Batch, Error> {
             Some(format!("Hey there! You have {} unread messages! Go to MeroChat and reply: https://mero.chat/im", count))
         );
 
-        message.html_part = Some(format!("Hey there! You have {} unread messages from{:?} <br><br><a href ={}>Go to MeroChat and reply</a>", count, user_names, "https://mero.chat/im"));
+        message.html_part = Some(format!("Hey there! You have {} unread messages from{} <br><br><a href ={}>Go to MeroChat and reply</a>", count, user_names.join(", "), "https://mero.chat/im"));
         message.push_recipient(Recipient::new(email_address));
 
         emails.push(message);
