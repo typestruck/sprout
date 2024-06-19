@@ -9,6 +9,7 @@ use tokio_postgres::Error;
 
 mod database;
 
+//this program will be called every hour to check unread messages
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let client = Client::new(
@@ -23,8 +24,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     if emails.messages.is_empty() {
         println!("No emails to send");
     } else {
-        client.send(emails).await.expect("Could not send emails!");
-        println!("Successfully sent emails");
+        let response = client.send(emails).await.expect("Could not send emails!");
+        println!("Mailjet response {:?}", response);
     }
 
     Ok(())
@@ -67,8 +68,7 @@ struct Batch {
 impl Payload for Batch {
     fn to_json(&self) -> String {
         return format!(
-            "{{ {}: {} }}",
-            "Messages",
+            "{{ \"Messages\": {} }}",
             to_string(&self.messages).unwrap()
         );
     }

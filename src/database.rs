@@ -1,10 +1,10 @@
 use tokio_postgres::{Error, NoTls};
 
 pub struct User {
-    pub id: u32,
+    pub id: i32,
     pub email: String,
     pub name: String,
-    pub unread_messages: i32,
+    pub unread_messages: i64,
 }
 
 pub async fn select_users_with_unread_messages() -> Result<Vec<User>, Error> {
