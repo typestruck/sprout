@@ -3,9 +3,9 @@ use itertools::Itertools;
 use mailjet_rs::common::{Payload, Recipient};
 use mailjet_rs::v3::Message;
 use mailjet_rs::{Client, SendAPIVersion};
-use postgres::Error;
 use serde_json::to_string;
 use std::env;
+use tokio_postgres::Error;
 
 mod database;
 
@@ -16,7 +16,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         env::var("MAILJET_PUBLIC_KEY").unwrap().as_str(),
         env::var("MAILJET_PRIVATE_KEY").unwrap().as_str(),
     );
-    let emails = build_emails()?;
+    let emails = build_emails().await?;
 
     println!("Checking for emails to send...");
 
@@ -30,9 +30,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     Ok(())
 }
 
-fn build_emails() -> Result<Batch, Error> {
-    let mut client = database::connect()?; //poor man's monad
-    let users = database::select_users_with_unread_messages(&mut client)?;
+async fn build_emails() -> Result<Batch, Error> {
+    let users = database::select_users_with_unread_messages().await?;
     let mut emails = Vec::new();
 
     for (id, chunk) in &users.into_iter().chunk_by(|elt| elt.id) {
