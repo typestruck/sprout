@@ -3,8 +3,9 @@ use itertools::Itertools;
 use mailjet_rs::common::{Payload, Recipient};
 use mailjet_rs::v3::Message;
 use mailjet_rs::{Client, SendAPIVersion};
-use serde_json::to_string;
+use serde_json::{to_string, Map, Value};
 use std::env;
+use uuid::Uuid;
 use tokio_postgres::Error;
 
 mod database;
@@ -40,7 +41,7 @@ async fn build_emails() -> Result<Batch, Error> {
         let mut user_names: Vec<String> = Vec::new();
 
         for r in &rows {
-            user_names.push(format!(" <b>{}</b>", r.name));
+            user_names.push(format!(" <i>{}</i>", r.name));
         }
 
         let count = rows[0].unread_messages;
@@ -49,10 +50,20 @@ async fn build_emails() -> Result<Batch, Error> {
             "contact@mero.chat",
             "MeroChat",
             Some("You have unread messages on MeroChat!".to_string()),
-            Some(format!("Hey there! You have {} unread messages! Go to MeroChat and reply: https://mero.chat/im", count))
+            None
         );
+        let email_id = Uuid::new_v4().to_string();
+        let mut vars = Map::new();
 
-        message.html_part = Some(format!("Hey there! You have {} unread messages from{} <br><br><a href ={}>Go to MeroChat and reply</a>", count, user_names.join(", "), "https://mero.chat/im"));
+        vars.insert(String::from("unread_count"), Value::from(count));
+        vars.insert(String::from("user_names"), Value::from(user_names.join(", ")));
+        vars.insert(String::from("recipient_id"), Value::from(id));
+        vars.insert(String::from("email_id"), Value::from(email_id.clone()));
+
+        message.vars = Some(vars);
+        message.use_mj_template_language = Some(true);
+        message.mj_template_id = Some(6073398);
+        message.mj_custom_id = Some(email_id);
         message.push_recipient(Recipient::new(email_address));
 
         emails.push(message);
