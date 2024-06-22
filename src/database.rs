@@ -41,7 +41,7 @@ pub async fn select_users_with_unread_messages() -> Result<Vec<User>, Error> {
 pub async fn insert_unsubscribe_tokens(messages: &Vec<Message>) -> Result<(), Error> {
     let (client, connection) =
         tokio_postgres::connect("host=localhost user=merochat dbname=merochat", NoTls).await?;
-    let query = "insert into unsubcribe_tokens (unsubscriber, contents) values ";
+    let query = "insert into unsubscribe_tokens (unsubscriber, contents) values ";
     let mut rows = Vec::new();
 
     for m in messages {
