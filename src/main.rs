@@ -25,8 +25,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     if emails.messages.is_empty() {
         println!("No emails to send");
     } else {
-        let response = client.send(emails).await.expect("Could not send emails!");
-        println!("Mailjet response {:?}", response);
+        database::insert_unsubscribe_tokens(&emails.messages).await?;
+        println!("Mailjet response {:?}", client.send(emails).await.expect("Could not send emails!"));
     }
 
     Ok(())
@@ -63,7 +63,6 @@ async fn build_emails() -> Result<Batch, Error> {
         message.vars = Some(vars);
         message.use_mj_template_language = Some(true);
         message.mj_template_id = Some(6073398);
-        message.mj_custom_id = Some(email_id);
         message.push_recipient(Recipient::new(email_address));
 
         emails.push(message);
