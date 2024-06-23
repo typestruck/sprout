@@ -14,7 +14,7 @@ pub async fn select_users_with_unread_messages() -> Result<Vec<User>, Error> {
     let query = "
         SELECT r.id, r.email, s.name, count(1)
         FROM messages m JOIN users s ON m.sender = s.id JOIN users r ON m.recipient = r.id
-        WHERE status < 4 AND date >= (utc_now() - INTERVAL '1 hour') AND not(r.temporary) AND r.email LIKE '%@%' AND r.receive_email < 2
+        WHERE status >= 0 AND status < 3 AND date >= (utc_now() - INTERVAL '1 hour') AND not(r.temporary) AND r.email LIKE '%@%' AND r.receive_email < 2
         GROUP BY recipient, sender, r.email, r.id, s.name
         ORDER BY recipient
         ";
