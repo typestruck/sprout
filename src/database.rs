@@ -17,10 +17,10 @@ pub async fn select_users_with_unread_messages() -> Result<Vec<User>, Error> {
         WHERE
             status >= 0 AND status < 3 AND
             date >= (utc_now() - INTERVAL '1 day') AND
-            not r.temporary AND not r.pwa
-            AND r.email LIKE '%@%'
-            AND r.receive_email < 2
-            AND NOT EXISTS (select 1 from histories h where h.recipient = m.recipient AND h.recipient_deleted_to IS NOT NULL AND m.id <= h.recipient_deleted_to)
+            not r.temporary AND
+            r.email LIKE '%@%' AND
+            r.receive_email < 2 AND
+            NOT EXISTS (select 1 from histories h where h.recipient = m.recipient AND h.recipient_deleted_to IS NOT NULL AND m.id <= h.recipient_deleted_to)
         GROUP BY recipient, sender, r.email, r.id, s.name
         ORDER BY recipient
         ";
