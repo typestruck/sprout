@@ -5,6 +5,7 @@ authors = ["Eduardo Asafe <e@asafe.dev>"]
 edition = "2021"
 
 [dependencies]
+rocket = { version = "0.5.1", features = ["json"] }
 itertools = "0.13.0"
 mailjet-rs = "0.3.0"
 tokio-postgres = "0.7.10"
