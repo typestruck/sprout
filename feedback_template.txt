@@ -1,0 +1,11 @@
+MeroChat feedback from {{var:feedbacker}}
+
+
+
+Comments: {{var:comments}}
+
+File: {{var:file}}
+
+
+
+select * from feedbacks where feedbacker = {{var:feedbacker}} order by id desc

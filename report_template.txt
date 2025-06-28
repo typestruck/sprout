@@ -1,0 +1,12 @@
+MeroChat report from {{var:reporter}}
+
+
+Reason: {{var:reason}}
+
+Comments: {{var:comment}}
+
+Reported: {{var:reported}}
+
+
+
+select * from reports where reporter = {{var:reporter}} and reported = {{var:reported}} order by date desc

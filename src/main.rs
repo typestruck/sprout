@@ -37,7 +37,7 @@ async fn serve() -> Result<(), rocket::Error> {
     let figment = rocket::Config::figment().merge(("port", 4000));
 
     rocket::custom(figment)
-        .mount("/", routes![reset])
+        .mount("/", routes![reset, report, feedback])
         .launch()
         .await?;
 
@@ -73,20 +73,119 @@ fn build_reset_email(reseted : Reset) -> Batch {
     let mut message = Message::new(
         "contact@mero.chat",
         "MeroChat",
-        Some("Password reset on MeroChat!".to_string()),
+        Some("Password reset on MeroChat".to_string()),
         None,
     );
-    let email_id = Uuid::new_v4().to_string();
     let mut vars = Map::new();
 
     vars.insert(String::from("token"), Value::from(reseted.token));
     vars.insert(String::from("recipient_id"), Value::from(reseted.user_id));
-    vars.insert(String::from("email_id"), Value::from(email_id.clone()));
+    vars.insert(String::from("email_id"), Value::from(Uuid::new_v4().to_string().clone()));
 
     message.vars = Some(vars);
     message.use_mj_template_language = Some(true);
     message.mj_template_id = Some(7108800);
     message.push_recipient(Recipient::new(&reseted.email));
+
+    return Batch { messages: vec![message] };
+}
+
+#[derive(Deserialize)]
+#[serde(crate = "rocket::serde")]
+struct Report<'r>  {
+    reason: Cow<'r, str>,
+    comment: Cow<'r,  str>,
+    reported: u64,
+    reporter: u64,
+}
+
+#[post("/report", data = "<reported>")]
+async fn report(reported : Json<Report<'_>>) -> Json<()> {
+    let client = Client::new(
+        SendAPIVersion::V3,
+        env::var("MAILJET_PUBLIC_KEY").unwrap().as_str(),
+        env::var("MAILJET_PRIVATE_KEY").unwrap().as_str(),
+    );
+    let emails = build_report_email(reported.into_inner());
+
+    println!(
+        "Mailjet response {:?}",
+        client.send(emails).await.expect("Could not send emails!")
+    );
+
+    return Json(());
+}
+
+fn build_report_email(reported : Report) -> Batch {
+    let mut message = Message::new(
+        "contact@mero.chat",
+        "MeroChat",
+        Some("New report on MeroChat".to_string()),
+        None,
+    );
+    let mut vars = Map::new();
+
+    vars.insert(String::from("reason"), Value::from(reported.reason));
+    vars.insert(String::from("comment"), Value::from(reported.comment));
+    vars.insert(String::from("reported"), Value::from(reported.reported));
+    vars.insert(String::from("reporter"), Value::from(reported.reporter));
+    vars.insert(String::from("recipient_id"), Value::from(4));
+    vars.insert(String::from("email_id"), Value::from(Uuid::new_v4().to_string().clone()));
+
+    message.vars = Some(vars);
+    message.use_mj_template_language = Some(true);
+    message.mj_template_id = Some(7112844);
+    message.push_recipient(Recipient::new("asafe.hai.kai@gmail.com"));
+    message.push_recipient(Recipient::new("e@asafe.dev"));
+
+    return Batch { messages: vec![message] };
+}
+
+#[derive(Deserialize)]
+#[serde(crate = "rocket::serde")]
+struct Feedback<'r>  {
+    comments: Cow<'r,  str>,
+    file : Cow<'r, str>,
+    feedbacker: u64,
+}
+
+#[post("/feedback", data = "<feedbacked>")]
+async fn feedback(feedbacked : Json<Feedback<'_>>) -> Json<()> {
+    let client = Client::new(
+        SendAPIVersion::V3,
+        env::var("MAILJET_PUBLIC_KEY").unwrap().as_str(),
+        env::var("MAILJET_PRIVATE_KEY").unwrap().as_str(),
+    );
+    let emails = build_feedback_email(feedbacked.into_inner());
+
+    println!(
+        "Mailjet response {:?}",
+        client.send(emails).await.expect("Could not send emails!")
+    );
+
+    return Json(());
+}
+
+fn build_feedback_email(feedbacked : Feedback) -> Batch {
+    let mut message = Message::new(
+        "contact@mero.chat",
+        "MeroChat",
+        Some("New feedback on MeroChat".to_string()),
+        None,
+    );
+    let mut vars = Map::new();
+
+    vars.insert(String::from("comments"), Value::from(feedbacked.comments));
+    vars.insert(String::from("feedbacker"), Value::from(feedbacked.feedbacker));
+    vars.insert(String::from("file"), Value::from(feedbacked.file));
+    vars.insert(String::from("recipient_id"), Value::from(4));
+    vars.insert(String::from("email_id"), Value::from(Uuid::new_v4().to_string().clone()));
+
+    message.vars = Some(vars);
+    message.use_mj_template_language = Some(true);
+    message.mj_template_id = Some(7113012);
+    message.push_recipient(Recipient::new("asafe.hai.kai@gmail.com"));
+    message.push_recipient(Recipient::new("e@asafe.dev"));
 
     return Batch { messages: vec![message] };
 }
@@ -134,7 +233,6 @@ async fn build_unread_emails() -> Result<Batch, Error> {
             Some("You have unread messages on MeroChat!".to_string()),
             None,
         );
-        let email_id = Uuid::new_v4().to_string();
         let mut vars = Map::new();
 
         vars.insert(String::from("unread_count"), Value::from(count));
@@ -143,7 +241,7 @@ async fn build_unread_emails() -> Result<Batch, Error> {
             Value::from(user_names.join(", ")),
         );
         vars.insert(String::from("recipient_id"), Value::from(id));
-        vars.insert(String::from("email_id"), Value::from(email_id.clone()));
+        vars.insert(String::from("email_id"), Value::from(Uuid::new_v4().to_string().clone()));
 
         message.vars = Some(vars);
         message.use_mj_template_language = Some(true);
