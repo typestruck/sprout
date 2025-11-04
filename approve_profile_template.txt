@@ -1,0 +1,29 @@
+[https://static.mero.chat/file/default/logo-3-small.png]
+
+
+
+MeroChat profile approval request
+
+
+
+Field: {{var:field}}
+
+Value: {{var:value}}
+
+User id: {{var:user_id}}
+
+
+
+select {{var:field}} from moderated_profile_fields where moderated = {{var:user_id}};
+
+
+
+[https://static.mero.chat/file/default/logo-3-small.png]
+
+
+
+Friendly Random Chat
+
+
+
+[https://www.mailjet.com/?utm_source=footer&utm_medium=email&utm_campaign=logo1]

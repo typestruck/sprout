@@ -37,11 +37,59 @@ async fn serve() -> Result<(), rocket::Error> {
     let figment = rocket::Config::figment().merge(("port", 4000));
 
     rocket::custom(figment)
-        .mount("/", routes![reset, report, feedback])
+        .mount("/", routes![reset, report, feedback, approve])
         .launch()
         .await?;
 
     return Ok(());
+}
+
+#[derive(Deserialize)]
+#[serde(crate = "rocket::serde")]
+struct Approve<'r>  {
+    field: Cow<'r, str>,
+    value: Cow<'r, str>,
+    user_id: u64,
+}
+
+#[post("/approve", data = "<approved>")]
+async fn approve(approved : Json<Approve<'_>>) -> Json<()> {
+    let client = Client::new(
+        SendAPIVersion::V3,
+        env::var("MAILJET_PUBLIC_KEY").unwrap().as_str(),
+        env::var("MAILJET_PRIVATE_KEY").unwrap().as_str(),
+    );
+    let emails = build_approve_email(approved.into_inner());
+
+    println!(
+        "Mailjet response {:?}",
+        client.send(emails).await.expect("Could not send emails!")
+    );
+
+    return Json(());
+}
+
+fn build_approve_email(approved : Approve) -> Batch {
+    let mut message = Message::new(
+        "contact@mero.chat",
+        "MeroChat",
+        Some("Approve profile change on MeroChat".to_string()),
+        None,
+    );
+    let mut vars = Map::new();
+
+    vars.insert(String::from("field"), Value::from(approved.field));
+    vars.insert(String::from("value"), Value::from(approved.value));
+    vars.insert(String::from("user_id"), Value::from(approved.user_id));
+    vars.insert(String::from("email_id"), Value::from(Uuid::new_v4().to_string().clone()));
+
+    message.vars = Some(vars);
+    message.use_mj_template_language = Some(true);
+    message.mj_template_id = Some(7459535);
+    message.push_recipient(Recipient::new("asafe.hai.kai@gmail.com"));
+    message.push_recipient(Recipient::new("e@asafe.dev"));
+
+    return Batch { messages: vec![message] };
 }
 
 #[derive(Deserialize)]
@@ -263,3 +311,4 @@ impl Payload for Batch {
         return format!("{{ \"Messages\": {} }}", to_string(&self.messages).unwrap());
     }
 }
+
